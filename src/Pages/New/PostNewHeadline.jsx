@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const PostVideo = () => {
+const PostHeadline = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [postedBy, setPostedBy] = useState('Arun');
@@ -9,32 +9,25 @@ const PostVideo = () => {
   const [enableComments, setEnableComments] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('2025-07-05');
   const [scheduleTime, setScheduleTime] = useState('10:00');
-  const [avatar, setAvatar] = useState(null);
-  const [avatarUrl, setAvatarUrl] = useState('');
-  const [video, setVideo] = useState(null);
-  const [videoUrl, setVideoUrl] = useState('');
+  const [thumbnail, setThumbnail] = useState(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  // Handle avatar upload
-  const handleAvatarChange = (e) => {
+  const handleThumbnailChange = (e) => {
     const file = e.target.files[0];
-    setAvatar(file);
-    setAvatarUrl(URL.createObjectURL(file));
+    if (file) {
+      setThumbnail(file);
+      setThumbnailUrl(URL.createObjectURL(file));
+    }
   };
 
-  // Handle video upload
-  const handleVideoChange = (e) => {
-    const file = e.target.files[0];
-    setVideo(file);
-    setVideoUrl(URL.createObjectURL(file));
-  };
-
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
+    setError('');
 
     const formData = new FormData();
     formData.append('title', title);
@@ -44,8 +37,7 @@ const PostVideo = () => {
     formData.append('enableComments', enableComments);
     formData.append('scheduleDate', scheduleDate);
     formData.append('scheduleTime', scheduleTime);
-    if (avatar) formData.append('avatar', avatar);
-    if (video) formData.append('video', video);
+    if (thumbnail) formData.append('avatar', thumbnail); // backend expects "avatar"
 
     try {
       const response = await axios.post(
@@ -54,25 +46,22 @@ const PostVideo = () => {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-            // 'Authorization': `Bearer YOUR_ACCESS_TOKEN_HERE`, // Uncomment if authentication is required
           },
         }
       );
-      console.log('Success:', response.data);
-      setMessage('Article posted successfully!');
+      setMessage('✅ Headline posted successfully!');
+      // Reset form
       setTitle('');
       setDescription('');
-      setAvatar(null);
-      setAvatarUrl('');
-      setVideo(null);
-      setVideoUrl('');
-    } catch (error) {
-      if (error.response) {
-        console.error('Server Response:', error.response.data);
+      setThumbnail(null);
+      setThumbnailUrl('');
+    } catch (err) {
+      console.error('Upload error:', err);
+      if (err.response) {
+        setError(`❌ ${err.response.data.message || 'Server error occurred'}`);
       } else {
-        console.error('Error:', error.message);
+        setError('❌ Network error or server unavailable');
       }
-      setMessage('Error posting article. Please check the console for details.');
     } finally {
       setLoading(false);
     }
@@ -80,75 +69,58 @@ const PostVideo = () => {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-      <h2 className="text-2xl font-bold mb-4">Create New Headlines</h2>
+      <h2 className="text-2xl font-bold mb-4">📰 Create New News Headline</h2>
 
-      {/* Upload Section */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        {/* Avatar Upload */}
-        <div className="border border-dashed border-gray-400 p-6 text-center flex flex-col items-center justify-center cursor-pointer">
-          <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" id="avatarInput" />
-          <label htmlFor="avatarInput" className="cursor-pointer">
-            <span className="text-gray-500">📷 Add Avatar (Thumbnail)</span>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4 border border-dashed p-6 rounded-lg text-center">
+          <input type="file" accept="image/*" onChange={handleThumbnailChange} className="hidden" id="thumbnailInput" />
+          <label htmlFor="thumbnailInput" className="cursor-pointer text-blue-500">📷 Upload Thumbnail</label>
+          {thumbnail && <p className="text-sm text-green-600 mt-2">Selected: {thumbnail.name}</p>}
+          {thumbnailUrl && <img src={thumbnailUrl} alt="Thumbnail" className="w-32 h-32 mx-auto mt-2 rounded" />}
+        </div>
+
+        <label className="block mb-2 font-semibold">Title</label>
+        <input type="text" className="w-full border p-2 rounded-lg mb-4" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Headline Title" required />
+
+        <label className="block mb-2 font-semibold">Description</label>
+        <textarea className="w-full border p-2 rounded-lg mb-4 h-24" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Headline Description" required />
+
+        <label className="block mb-2 font-semibold">Posted By</label>
+        <input type="text" className="w-full border p-2 rounded-lg mb-4" value={postedBy} onChange={(e) => setPostedBy(e.target.value)} required />
+
+        <div className="flex gap-6 mb-4">
+          <label className="flex items-center space-x-2">
+            <input type="checkbox" checked={schedulePost} onChange={() => setSchedulePost(!schedulePost)} />
+            <span>Schedule Post</span>
           </label>
-          {avatar && <p className="text-sm text-green-600 mt-2">Avatar selected: {avatar.name}</p>}
-        </div>
-
-        {/* Video Upload */}
-        <div className="border border-dashed border-gray-400 p-6 text-center flex flex-col items-center justify-center cursor-pointer">
-          <input type="file" accept="video/*" onChange={handleVideoChange} className="hidden" id="videoInput" />
-          <label htmlFor="videoInput" className="cursor-pointer">
-            <span className="text-gray-500">📤 Upload Video</span>
+          <label className="flex items-center space-x-2">
+            <input type="checkbox" checked={enableComments} onChange={() => setEnableComments(!enableComments)} />
+            <span>Enable Comments</span>
           </label>
-          {video && <p className="text-sm text-green-600 mt-2">Video selected: {video.name}</p>}
         </div>
-      </div>
 
-      {/* Title Input */}
-      <label className="block mb-2 font-semibold">Title</label>
-      <input type="text" className="w-full border p-2 rounded-lg mb-4" placeholder="Enter headline title" value={title} onChange={(e) => setTitle(e.target.value)} />
-
-      {/* Description */}
-      <label className="block mb-2 font-semibold">Description</label>
-      <textarea className="w-full border p-2 rounded-lg mb-4 h-24" placeholder="Enter details" value={description} onChange={(e) => setDescription(e.target.value)}></textarea>
-
-      {/* Posted By */}
-      <label className="block mb-2 font-semibold">Posted By</label>
-      <input type="text" className="w-full border p-2 rounded-lg mb-4" placeholder="Enter name" value={postedBy} onChange={(e) => setPostedBy(e.target.value)} />
-
-      {/* Options */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <input type="checkbox" checked={schedulePost} onChange={() => setSchedulePost(!schedulePost)} className="w-4 h-4" />
-          <label className="font-semibold">Schedule your post</label>
-        </div>
-        <div className="flex items-center gap-2">
-          <input type="checkbox" checked={enableComments} onChange={() => setEnableComments(!enableComments)} className="w-4 h-4" />
-          <label className="font-semibold">Enable Comments</label>
-        </div>
-      </div>
-
-      {/* Schedule Inputs */}
-      {schedulePost && (
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block mb-2 font-semibold">Schedule Posting Date</label>
-            <input type="date" className="w-full border p-2 rounded-lg" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} />
+        {schedulePost && (
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block mb-2 font-semibold">Date</label>
+              <input type="date" className="w-full border p-2 rounded-lg" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="block mb-2 font-semibold">Time</label>
+              <input type="time" className="w-full border p-2 rounded-lg" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} />
+            </div>
           </div>
-          <div>
-            <label className="block mb-2 font-semibold">Schedule Posting Time</label>
-            <input type="time" className="w-full border p-2 rounded-lg" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} />
-          </div>
-        </div>
-      )}
+        )}
 
-      {/* Submit Button */}
-      <button onClick={handleSubmit} className="w-full bg-[#1C2059] text-white p-3 rounded-lg" disabled={loading}>
-        {loading ? 'Posting...' : 'Post Headline'}
-      </button>
+        <button type="submit" className="w-full bg-[#1C2059] text-white p-3 rounded-lg mt-4 hover:bg-[#2c3a91]" disabled={loading}>
+          {loading ? 'Posting...' : 'Post News Headline'}
+        </button>
 
-      {message && <p className="text-center mt-4 text-sm text-gray-700">{message}</p>}
+        {message && <p className="text-green-600 mt-4 text-center">{message}</p>}
+        {error && <p className="text-red-600 mt-4 text-center">{error}</p>}
+      </form>
     </div>
   );
 };
 
-export default PostVideo;
+export default PostHeadline;
