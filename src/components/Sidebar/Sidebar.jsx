@@ -44,7 +44,7 @@ const Sidebar = ({ view }) => {
       >
         <div className="flex items-center">
           <img src={newIcon} alt="New" className="mr-4" />
-          New
+          Post News
         </div>
         <img src={dropNew ? dropdown : dropleft} alt="dropdown" />
       </div>
@@ -96,11 +96,11 @@ const Sidebar = ({ view }) => {
         </div>
       )}
 
-      <Link to="/Post-News" className="hover:bg-[#FFAC06] flex items-center px-5 py-2 mt-4">
+   {/*    <Link to="/Post-News" className="hover:bg-[#FFAC06] flex items-center px-5 py-2 mt-4">
         <img src={profileIcon} className="mr-4" alt="" />
         Post News
       </Link>
-
+ */}
       <Link to="/user-management" className="hover:bg-[#FFAC06] flex items-center px-5 py-2 mt-4">
         <img src={setting} className="mr-4" alt="" />
         User Management
